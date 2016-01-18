@@ -1,50 +1,6 @@
-# Author: J. MUÑOZ
-VERSION = 1
-
-# GCC compiler
-CC= g++
-
-# Location of Libraries
-GLIB = asdfasd
-GSTREAMER = asdfasdf
-OPENCV = /usr/include/opencv
-MATLAB = /opt/matlab2007a/extern/include/
-
-
-# Linker flags for libraries
-LDFLAGS1=$(LDPATHS) -lm -lc -lpthread
-
-# Include paths
-INCPATHS =  -I${OPENCV} -I${MATLAB}
-
-#CFLAGS= -g -O3 -Wall -pedantic
-CFLAGS= -g -O3 -Wall
-
-# Object files needed for your application
-VARIOUSOBJ = emisor.o receptor.o
-
-# C/C++ source
-CFILES = emisor.cpp receptor.cpp
-
-# H files
-HFILES = emisor.h receptor.h
-
-TARGETS = emisor.o receptor.o sender receiver 
-
-
-all: ${TARGETS} 
-
-emisor.o: emisor.cpp 
-	$(CC) $(CFLAGS) $(INCPATHS) -c emisor.cpp
-
-receptor.o: receptor.cpp 
-	$(CC) $(CFLAGS) $(INCPATHS) -c receptor.cpp
-
-sender:	$(VARIOUSOBJ)
-	$(CC)  $(CFLAGS) $(LDFLAGS1) -g -o $@ emisor.o
-
-receiver:	$(VARIOUSOBJ)
-	$(CC)  $(CFLAGS) $(LDFLAGS1) -g -o $@ receptor.o
+all:
+	gcc -Wall `pkg-config --cflags --libs gstreamer-1.0` emisor.cpp -o sender -pthread -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include  -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 
+	gcc -Wall `pkg-config --cflags --libs gstreamer-1.0` receptor.cpp -o receiver -pthread -I/usr/include/gstreamer-1.0 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include  -lgstreamer-1.0 -lgobject-2.0 -lglib-2.0 
 
 clean:
 	touch sender receiver
