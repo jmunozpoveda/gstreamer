@@ -104,7 +104,7 @@ setup_ghost_sink (GstElement * sink, GstBin * bin)
   GstPad *binPad = gst_ghost_pad_new ("sink", sinkPad);
   gst_element_add_pad (GST_ELEMENT (bin), binPad);
 }
-
+/*
 static SessionData *
 make_audio_session (guint sessionNum)
 {
@@ -131,7 +131,42 @@ make_audio_session (guint sessionNum)
       "encoding-name", G_TYPE_STRING, "PCMA", NULL);
 
   return ret;
+}*/
+
+
+static SessionData *
+make_audio_session (guint sessionNum)
+{
+  SessionData *ret = session_new (sessionNum);
+  GstBin *bin = GST_BIN (gst_bin_new ("audio"));
+  
+
+  GstElement *sink = gst_element_factory_make ("filesink", NULL);
+  
+  GstElement *rtpamrdepay = gst_element_factory_make ("rtpamrdepay", NULL);
+  GstElement *amrdecoder = gst_element_factory_make ("amrnbdec", NULL);
+  GstElement *audioconvert = gst_element_factory_make ("audioconvert", NULL);
+  GstElement *wavenc = gst_element_factory_make ("wavenc", NULL);
+
+  g_object_set(sink, "location", "RECIBIDO_SERVER.wav", NULL);
+  
+  gst_bin_add_many (bin, rtpamrdepay, amrdecoder, audioconvert, wavenc, sink, NULL);
+  gst_element_link_many ( rtpamrdepay, amrdecoder, audioconvert, wavenc, sink, NULL);
+     
+  
+  
+  setup_ghost_sink (rtpamrdepay, bin);
+
+  ret->output = GST_ELEMENT (bin);
+  ret->caps = gst_caps_new_simple ("application/x-rtp",
+      "media", G_TYPE_STRING, "audio",
+      "clock-rate", G_TYPE_INT, 8000,
+      "encoding-name", G_TYPE_STRING, "AMR", NULL);
+
+  return ret;
 }
+
+
 
 static SessionData *
 make_video_session (guint sessionNum)
@@ -303,8 +338,7 @@ join_session (GstElement * pipeline, GstElement * rtpBin, SessionData * session)
 
   /* enable RFC4588 retransmission handling by setting rtprtxreceive
    * as the "aux" element of rtpbin */
-  g_signal_connect (rtpBin, "request-aux-receiver",
-      (GCallback) request_aux_receiver, session);
+  //g_signal_connect (rtpBin, "request-aux-receiver", (GCallback) request_aux_receiver, session);
 
   gst_bin_add_many (GST_BIN (pipeline), rtpSrc, rtcpSrc, rtcpSink, NULL);
 

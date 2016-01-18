@@ -114,24 +114,51 @@ setup_ghost (GstElement * src, GstBin * bin)
   gst_element_add_pad (GST_ELEMENT (bin), binPad);
 }
 
+// static SessionData *
+// make_audio_session (guint sessionNum)
+// {
+//   SessionData *session;
+//   GstBin *audioBin = GST_BIN (gst_bin_new (NULL));
+//   GstElement *audioSrc = gst_element_factory_make ("audiotestsrc", NULL);
+//   GstElement *encoder = gst_element_factory_make ("alawenc", NULL);
+//   GstElement *payloader = gst_element_factory_make ("rtppcmapay", NULL);
+//   g_object_set (audioSrc, "is-live", TRUE, NULL);
+// 
+//   gst_bin_add_many (audioBin, audioSrc, encoder, payloader, NULL);
+//   gst_element_link_many (audioSrc, encoder, payloader, NULL);
+// 
+//   setup_ghost (payloader, audioBin);
+// 
+//   session = session_new (sessionNum);
+//   session->input = GST_ELEMENT (audioBin);
+// 
+//   return session;
+// }
+
+
 static SessionData *
 make_audio_session (guint sessionNum)
 {
+    
   SessionData *session;
   GstBin *audioBin = GST_BIN (gst_bin_new (NULL));
-  GstElement *audioSrc = gst_element_factory_make ("audiotestsrc", NULL);
-  GstElement *encoder = gst_element_factory_make ("alawenc", NULL);
-  GstElement *payloader = gst_element_factory_make ("rtppcmapay", NULL);
-  g_object_set (audioSrc, "is-live", TRUE, NULL);
+  
+  GstElement *filesrc = gst_element_factory_make ("filesrc", NULL);
+  GstElement *wavparse = gst_element_factory_make ("wavparse", NULL);
+  GstElement *audioresample = gst_element_factory_make ("audioresample", NULL);
+  GstElement *amrencoder = gst_element_factory_make ("amrnbenc", NULL);
+  GstElement *rtpamrpay = gst_element_factory_make ("rtpamrpay", NULL);
+  
+  g_object_set(filesrc, "location", "audioA.wav", NULL);
 
-  gst_bin_add_many (audioBin, audioSrc, encoder, payloader, NULL);
-  gst_element_link_many (audioSrc, encoder, payloader, NULL);
+  gst_bin_add_many      (audioBin, filesrc, wavparse,  amrencoder, rtpamrpay, NULL);
+  gst_element_link_many (filesrc, wavparse,  amrencoder, rtpamrpay, NULL);
 
-  setup_ghost (payloader, audioBin);
-
-  session = session_new (sessionNum);
-  session->input = GST_ELEMENT (audioBin);
-
+   setup_ghost (rtpamrpay, audioBin);
+ 
+   session = session_new (sessionNum);
+   session->input = GST_ELEMENT (audioBin);
+ 
   return session;
 }
 
@@ -215,8 +242,7 @@ add_stream (GstPipeline * pipe, GstElement * rtpBin, SessionData * session)
       session->input, NULL);
 
   /* enable retransmission by setting rtprtxsend as the "aux" element of rtpbin */
-  g_signal_connect (rtpBin, "request-aux-sender",
-      (GCallback) request_aux_sender, session);
+  //g_signal_connect (rtpBin, "request-aux-sender",   (GCallback) request_aux_sender, session);
 
   g_object_set (rtpSink, "port", basePort, "host", "127.0.0.1", NULL);
   g_object_set (rtcpSink, "port", basePort + 1, "host", "127.0.0.1", "sync",
