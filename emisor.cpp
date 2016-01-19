@@ -30,7 +30,7 @@
  * A simple RTP server 
  *  sends the output of alsasrc as alaw encoded RTP on port 5002, RTCP is sent on
  *  port 5003. The destination is 127.0.0.1.
- *  the receiver RTCP reports are received on port 5007
+ *  the receiver RTCP reports are received on port 5003
  *
  * .-------.    .-------.    .-------.      .----------.     .-------.
  * |alsasrc|    |alawenc|    |pcmapay|      | rtpbin   |     |udpsink|  RTP
@@ -42,7 +42,7 @@
  *                                          |    send_rtcp->sink     | port=5003
  *                           .-------.      |          |     '-------' sync=false
  *                RTCP       |udpsrc |      |          |               async=false
- *              port=5007    |     src->recv_rtcp      |                       
+ *              port=5003    |     src->recv_rtcp      |                       
  *                           '-------'      '----------'              
  */
 
@@ -112,12 +112,12 @@ print_stats (GstElement * rtpbin)
  *    $AUDIO_SRC ! audioconvert ! audioresample ! $AUDIO_ENC ! $AUDIO_PAY ! rtpbin.send_rtp_sink_0  \
  *           rtpbin.send_rtp_src_0 ! udpsink port=5002 host=$DEST                      \
  *           rtpbin.send_rtcp_src_0 ! udpsink port=5003 host=$DEST sync=false async=false \
- *        udpsrc port=5007 ! rtpbin.recv_rtcp_sink_0
+ *        udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0
  */
 int
 main (int argc, char *argv[])
 {
-  GstElement *audiosrc, *audioconv, *audiores, *audioenc, *audiopay;
+  GstElement *audiosrc, *audioconv, *audiores, *audioenc, *audiopay, *wavparse;
   GstElement *rtpbin, *rtpsink, *rtcpsink, *rtcpsrc;
   GstElement *pipeline;
   GMainLoop *loop;
@@ -130,24 +130,27 @@ main (int argc, char *argv[])
   pipeline = gst_pipeline_new (NULL);
   g_assert (pipeline);
 
-  /* the audio capture and format conversion */
-  audiosrc = gst_element_factory_make (AUDIO_SRC, "audiosrc");
+    /* the audio capture and format conversion */
+  audiosrc = gst_element_factory_make ("filesrc", "filesrc");
+  g_object_set(audiosrc, "location", "audioA.wav", NULL);
   g_assert (audiosrc);
+  
+  wavparse = gst_element_factory_make ("wavparse", "wavparse");
+  
   audioconv = gst_element_factory_make ("audioconvert", "audioconv");
-  g_assert (audioconv);
   audiores = gst_element_factory_make ("audioresample", "audiores");
-  g_assert (audiores);
+  
   /* the encoding and payloading */
-  audioenc = gst_element_factory_make (AUDIO_ENC, "audioenc");
+  audioenc = gst_element_factory_make ("amrnbenc", "amrnbenc");
   g_assert (audioenc);
-  audiopay = gst_element_factory_make (AUDIO_PAY, "audiopay");
+  audiopay = gst_element_factory_make ("rtpamrpay", "rtpamrpay");
   g_assert (audiopay);
 
   /* add capture and payloading to the pipeline and link */
-  gst_bin_add_many (GST_BIN (pipeline), audiosrc, audioconv, audiores,
+  gst_bin_add_many (GST_BIN (pipeline), audiosrc, wavparse, audioconv, audiores,
       audioenc, audiopay, NULL);
 
-  if (!gst_element_link_many (audiosrc, audioconv, audiores, audioenc,
+  if (!gst_element_link_many (audiosrc, wavparse, audioconv, audiores, audioenc,
           audiopay, NULL)) {
     g_error ("Failed to link audiosrc, audioconv, audioresample, "
         "audio encoder and audio payloader");
@@ -172,7 +175,7 @@ main (int argc, char *argv[])
 
   rtcpsrc = gst_element_factory_make ("udpsrc", "rtcpsrc");
   g_assert (rtcpsrc);
-  g_object_set (rtcpsrc, "port", 5007, NULL);
+  g_object_set (rtcpsrc, "port", 5003, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), rtpsink, rtcpsink, rtcpsrc, NULL);
 
