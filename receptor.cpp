@@ -19,9 +19,9 @@
 
 #include <string.h>
 #include <math.h>
-
+#include <stdio.h>
 #include <gst/gst.h>
-
+#include <gio/gio.h>
 /*
  * A simple RTP receiver 
  *
@@ -62,8 +62,13 @@ print_source_stats (GObject * source)
   GstStructure *stats;
   gchar *str;
 
-  g_return_if_fail (source != NULL);
-
+  if(source ==NULL)
+  {
+      printf("SOURCE ES NULL ------------------------------------------- \n");
+      return;
+  }
+  
+  
   /* get the source stats */
   g_object_get (source, "stats", &stats, NULL);
 
@@ -156,7 +161,16 @@ main (int argc, char *argv[])
 
   rtcpsink = gst_element_factory_make ("udpsink", "rtcpsink");
   g_assert (rtcpsink);
-  g_object_set (rtcpsink, "port", 5007, "host", DEST_HOST, NULL);
+  
+  //cojo el fd del socket del rtcpsrc y se lo fijo al rtcpsink y no hago la linea  de abajo
+  //g_object_set (rtcpsink, "port", 5007, "host", DEST_HOST, NULL);
+  GSocket* socket = NULL;
+    g_object_get(rtcpsrc,  "socket", &socket, NULL);
+    g_object_set(rtcpsink, "socket", socket, NULL);
+
+    
+  
+  
   /* no need for synchronisation or preroll on the RTCP sink */
   g_object_set (rtcpsink, "async", FALSE, "sync", FALSE, NULL);
 
