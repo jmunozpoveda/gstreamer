@@ -1,6 +1,5 @@
 /* GStreamer
- * Copyright (C) 2013 Collabora Ltd.
- *   @author Torrie Fischer <torrie.fischer@collabora.co.uk>
+ * Copyright (C) 2009 Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,395 +16,222 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+#include <string.h>
+#include <math.h>
+
 #include <gst/gst.h>
-#include <gst/rtp/rtp.h>
-#include <stdlib.h>
 
 /*
- * RTP receiver with RFC4588 retransmission handling enabled
+ * A simple RTP receiver 
  *
- *  In this example we have two RTP sessions, one for video and one for audio.
- *  Video is received on port 5000, with its RTCP stream received on port 5001
- *  and sent on port 5005. Audio is received on port 5005, with its RTCP stream
- *  received on port 5006 and sent on port 5011.
+ *  receives alaw encoded RTP audio on port 5002, RTCP is received on  port 5003.
+ *  the receiver RTCP reports are sent to port 5007
  *
- *  In both sessions, we set "rtprtxreceive" as the session's "aux" element
- *  in rtpbin, which enables RFC4588 retransmission handling for that session.
- *
- *             .-------.      .----------.        .-----------.   .---------.   .-------------.
- *  RTP        |udpsrc |      | rtpbin   |        |theoradepay|   |theoradec|   |autovideosink|
- *  port=5000  |      src->recv_rtp_0 recv_rtp_0->sink       src->sink     src->sink          |
- *             '-------'      |          |        '-----------'   '---------'   '-------------'
- *                            |          |
+ *             .-------.      .----------.     .---------.   .-------.   .--------.
+ *  RTP        |udpsrc |      | rtpbin   |     |pcmadepay|   |alawdec|   |alsasink|
+ *  port=5002  |      src->recv_rtp recv_rtp->sink     src->sink   src->sink      |
+ *             '-------'      |          |     '---------'   '-------'   '--------'
+ *                            |          |      
  *                            |          |     .-------.
  *                            |          |     |udpsink|  RTCP
- *                            |  send_rtcp_0->sink     | port=5005
+ *                            |    send_rtcp->sink     | port=5007
  *             .-------.      |          |     '-------' sync=false
  *  RTCP       |udpsrc |      |          |               async=false
- *  port=5001  |     src->recv_rtcp_0    |
- *             '-------'      |          |
- *                            |          |
- *             .-------.      |          |        .---------.   .-------.   .-------------.
- *  RTP        |udpsrc |      |          |        |pcmadepay|   |alawdec|   |autoaudiosink|
- *  port=5006  |      src->recv_rtp_1 recv_rtp_1->sink     src->sink   src->sink          |
- *             '-------'      |          |        '---------'   '-------'   '-------------'
- *                            |          |
- *                            |          |     .-------.
- *                            |          |     |udpsink|  RTCP
- *                            |  send_rtcp_1->sink     | port=5011
- *             .-------.      |          |     '-------' sync=false
- *  RTCP       |udpsrc |      |          |               async=false
- *  port=5007  |     src->recv_rtcp_1    |
- *             '-------'      '----------'
- *
+ *  port=5003  |     src->recv_rtcp      |                       
+ *             '-------'      '----------'              
  */
 
-GMainLoop *loop = NULL;
+/* the caps of the sender RTP stream. This is usually negotiated out of band with
+ * SDP or RTSP. */
+#define AUDIO_CAPS "application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)PCMA"
 
-typedef struct _SessionData
-{
-  int ref;
-  GstElement *rtpbin;
-  guint sessionNum;
-  GstCaps *caps;
-  GstElement *output;
-} SessionData;
+#define AUDIO_DEPAY "rtppcmadepay"
+#define AUDIO_DEC   "alawdec"
+#define AUDIO_SINK  "autoaudiosink"
 
-static SessionData *
-session_ref (SessionData * data)
-{
-  g_atomic_int_inc (&data->ref);
-  return data;
-}
+/* the destination machine to send RTCP to. This is the address of the sender and
+ * is used to send back the RTCP reports of this receiver. If the data is sent
+ * from another machine, change this address. */
+#define DEST_HOST "127.0.0.1"
 
+/* print the stats of a source */
 static void
-session_unref (gpointer data)
+print_source_stats (GObject * source)
 {
-  SessionData *session = (SessionData *) data;
-  if (g_atomic_int_dec_and_test (&session->ref)) {
-    g_object_unref (session->rtpbin);
-    gst_caps_unref (session->caps);
-    g_free (session);
-  }
+  GstStructure *stats;
+  gchar *str;
+
+  g_return_if_fail (source != NULL);
+
+  /* get the source stats */
+  g_object_get (source, "stats", &stats, NULL);
+
+  /* simply dump the stats structure */
+  str = gst_structure_to_string (stats);
+  g_print ("source stats: %s\n", str);
+
+  gst_structure_free (stats);
+  g_free (str);
 }
 
-static SessionData *
-session_new (guint sessionNum)
-{
-  SessionData *ret = g_new0 (SessionData, 1);
-  ret->sessionNum = sessionNum;
-  return session_ref (ret);
-}
-
+/* will be called when rtpbin signals on-ssrc-active. It means that an RTCP
+ * packet was received from another source. */
 static void
-setup_ghost_sink (GstElement * sink, GstBin * bin)
+on_ssrc_active_cb (GstElement * rtpbin, guint sessid, guint ssrc,
+    GstElement * depay)
 {
-  GstPad *sinkPad = gst_element_get_static_pad (sink, "sink");
-  GstPad *binPad = gst_ghost_pad_new ("sink", sinkPad);
-  gst_element_add_pad (GST_ELEMENT (bin), binPad);
-}
-/*
-static SessionData *
-make_audio_session (guint sessionNum)
-{
-  SessionData *ret = session_new (sessionNum);
-  GstBin *bin = GST_BIN (gst_bin_new ("audio"));
-  GstElement *queue = gst_element_factory_make ("queue", NULL);
-  GstElement *sink = gst_element_factory_make ("autoaudiosink", NULL);
-  GstElement *audioconvert = gst_element_factory_make ("audioconvert", NULL);
-  GstElement *audioresample = gst_element_factory_make ("audioresample", NULL);
-  GstElement *depayloader = gst_element_factory_make ("rtppcmadepay", NULL);
-  GstElement *decoder = gst_element_factory_make ("alawdec", NULL);
+  GObject *session, *isrc, *osrc;
 
-  gst_bin_add_many (bin, queue, depayloader, decoder, audioconvert,
-      audioresample, sink, NULL);
-  gst_element_link_many (queue, depayloader, decoder, audioconvert,
-      audioresample, sink, NULL);
+  g_print ("got RTCP from session %u, SSRC %u\n", sessid, ssrc);
 
-  setup_ghost_sink (queue, bin);
+  /* get the right session */
+  g_signal_emit_by_name (rtpbin, "get-internal-session", sessid, &session);
 
-  ret->output = GST_ELEMENT (bin);
-  ret->caps = gst_caps_new_simple ("application/x-rtp",
-      "media", G_TYPE_STRING, "audio",
-      "clock-rate", G_TYPE_INT, 8000,
-      "encoding-name", G_TYPE_STRING, "PCMA", NULL);
+  /* get the internal source (the SSRC allocated to us, the receiver */
+  g_object_get (session, "internal-source", &isrc, NULL);
+  print_source_stats (isrc);
 
-  return ret;
-}*/
-
-
-static SessionData *
-make_audio_session (guint sessionNum)
-{
-  SessionData *ret = session_new (sessionNum);
-  GstBin *bin = GST_BIN (gst_bin_new ("audio"));
-  
-
-  GstElement *sink = gst_element_factory_make ("filesink", NULL);
-  
-  GstElement *rtpamrdepay = gst_element_factory_make ("rtpamrdepay", NULL);
-  GstElement *amrdecoder = gst_element_factory_make ("amrnbdec", NULL);
-  GstElement *audioconvert = gst_element_factory_make ("audioconvert", NULL);
-  GstElement *wavenc = gst_element_factory_make ("wavenc", NULL);
-
-  g_object_set(sink, "location", "RECIBIDO_SERVER.wav", NULL);
-  
-  gst_bin_add_many (bin, rtpamrdepay, amrdecoder, audioconvert, wavenc, sink, NULL);
-  gst_element_link_many ( rtpamrdepay, amrdecoder, audioconvert, wavenc, sink, NULL);
-     
-  
-  
-  setup_ghost_sink (rtpamrdepay, bin);
-
-  ret->output = GST_ELEMENT (bin);
-  ret->caps = gst_caps_new_simple ("application/x-rtp",
-      "media", G_TYPE_STRING, "audio",
-      "clock-rate", G_TYPE_INT, 8000,
-      "encoding-name", G_TYPE_STRING, "AMR", NULL);
-
-  return ret;
+  /* get the remote source that sent us RTCP */
+  g_signal_emit_by_name (session, "get-source-by-ssrc", ssrc, &osrc);
+  print_source_stats (osrc);
 }
 
-
-
-static SessionData *
-make_video_session (guint sessionNum)
-{
-  SessionData *ret = session_new (sessionNum);
-  GstBin *bin = GST_BIN (gst_bin_new ("video"));
-  GstElement *queue = gst_element_factory_make ("queue", NULL);
-  GstElement *depayloader = gst_element_factory_make ("rtptheoradepay", NULL);
-  GstElement *decoder = gst_element_factory_make ("theoradec", NULL);
-  GstElement *converter = gst_element_factory_make ("videoconvert", NULL);
-  GstElement *sink = gst_element_factory_make ("autovideosink", NULL);
-
-  gst_bin_add_many (bin, depayloader, decoder, converter, queue, sink, NULL);
-  gst_element_link_many (queue, depayloader, decoder, converter, sink, NULL);
-
-  setup_ghost_sink (queue, bin);
-
-  ret->output = GST_ELEMENT (bin);
-  ret->caps = gst_caps_new_simple ("application/x-rtp",
-      "media", G_TYPE_STRING, "video",
-      "clock-rate", G_TYPE_INT, 90000,
-      "encoding-name", G_TYPE_STRING, "THEORA", NULL);
-
-  return ret;
-}
-
-static GstCaps *
-request_pt_map (GstElement * rtpbin, guint session, guint pt,
-    gpointer user_data)
-{
-  SessionData *data = (SessionData *) user_data;
-  g_print ("Looking for caps for pt %u in session %u, have %u\n", pt, session,
-      data->sessionNum);
-  if (session == data->sessionNum) {
-    g_print ("Returning %s\n", gst_caps_to_string (data->caps));
-    return gst_caps_ref (data->caps);
-  }
-  return NULL;
-}
-
+/* will be called when rtpbin has validated a payload that we can depayload */
 static void
-cb_eos (GstBus * bus, GstMessage * message, gpointer data)
+pad_added_cb (GstElement * rtpbin, GstPad * new_pad, GstElement * depay)
 {
-  g_print ("Got EOS\n");
-  g_main_loop_quit (loop);
+  GstPad *sinkpad;
+  GstPadLinkReturn lres;
+
+  g_print ("new payload on pad: %s\n", GST_PAD_NAME (new_pad));
+
+  sinkpad = gst_element_get_static_pad (depay, "sink");
+  g_assert (sinkpad);
+
+  lres = gst_pad_link (new_pad, sinkpad);
+  g_assert (lres == GST_PAD_LINK_OK);
+  gst_object_unref (sinkpad);
 }
 
-static void
-cb_state (GstBus * bus, GstMessage * message, gpointer data)
-{
-  GstObject *pipe = GST_OBJECT (data);
-  GstState old, _new, pending;
-  gst_message_parse_state_changed (message, &old, &_new, &pending);
-  if (message->src == pipe) {
-    g_print ("Pipeline %s changed state from %s to %s\n",
-        GST_OBJECT_NAME (message->src),
-        gst_element_state_get_name (old), gst_element_state_get_name (_new));
-  }
-}
-
-static void
-cb_warning (GstBus * bus, GstMessage * message, gpointer data)
-{
-  GError *error = NULL;
-  gst_message_parse_warning (message, &error, NULL);
-  g_printerr ("Got warning from %s: %s\n", GST_OBJECT_NAME (message->src),
-      error->message);
-  g_error_free (error);
-}
-
-static void
-cb_error (GstBus * bus, GstMessage * message, gpointer data)
-{
-  GError *error = NULL;
-  gst_message_parse_error (message, &error, NULL);
-  g_printerr ("Got error from %s: %s\n", GST_OBJECT_NAME (message->src),
-      error->message);
-  g_error_free (error);
-  g_main_loop_quit (loop);
-}
-
-static void
-handle_new_stream (GstElement * element, GstPad * _newPad, gpointer data)
-{
-  SessionData *session = (SessionData *) data;
-  gchar *padName;
-  gchar *myPrefix;
-
-  padName = gst_pad_get_name (_newPad);
-  myPrefix = g_strdup_printf ("recv_rtp_src_%u", session->sessionNum);
-
-  g_print ("New pad: %s, looking for %s_*\n", padName, myPrefix);
-
-  if (g_str_has_prefix (padName, myPrefix)) {
-    GstPad *outputSinkPad;
-    GstElement *parent;
-
-    parent = GST_ELEMENT (gst_element_get_parent (session->rtpbin));
-    gst_bin_add (GST_BIN (parent), session->output);
-    gst_element_sync_state_with_parent (session->output);
-    gst_object_unref (parent);
-
-    outputSinkPad = gst_element_get_static_pad (session->output, "sink");
-    g_assert_cmpint (gst_pad_link (_newPad, outputSinkPad), ==, GST_PAD_LINK_OK);
-    gst_object_unref (outputSinkPad);
-
-    g_print ("Linked!\n");
-  }
-  g_free (myPrefix);
-  g_free (padName);
-}
-
-static GstElement *
-request_aux_receiver (GstElement * rtpbin, guint sessid, SessionData * session)
-{
-  GstElement *rtx, *bin;
-  GstPad *pad;
-  gchar *name;
-  GstStructure *pt_map;
-
-  GST_INFO ("creating AUX receiver");
-  bin = gst_bin_new (NULL);
-  rtx = gst_element_factory_make ("rtprtxreceive", NULL);
-  pt_map = gst_structure_new ("application/x-rtp-pt-map",
-      "8", G_TYPE_UINT, 98, "96", G_TYPE_UINT, 99, NULL);
-  g_object_set (rtx, "payload-type-map", pt_map, NULL);
-  gst_structure_free (pt_map);
-  gst_bin_add (GST_BIN (bin), rtx);
-
-  pad = gst_element_get_static_pad (rtx, "src");
-  name = g_strdup_printf ("src_%u", sessid);
-  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
-  g_free (name);
-  gst_object_unref (pad);
-
-  pad = gst_element_get_static_pad (rtx, "sink");
-  name = g_strdup_printf ("sink_%u", sessid);
-  gst_element_add_pad (bin, gst_ghost_pad_new (name, pad));
-  g_free (name);
-  gst_object_unref (pad);
-
-  return bin;
-}
-
-static void
-join_session (GstElement * pipeline, GstElement * rtpBin, SessionData * session)
-{
-  GstElement *rtpSrc;
-  GstElement *rtcpSrc;
-  GstElement *rtcpSink;
-  gchar *padName;
-  guint basePort;
-
-  g_print ("Joining session %p\n", session);
-
-  session->rtpbin = g_object_ref (rtpBin);
-
-  basePort = 5000 + (session->sessionNum * 6);
-
-  rtpSrc = gst_element_factory_make ("udpsrc", NULL);
-  rtcpSrc = gst_element_factory_make ("udpsrc", NULL);
-  rtcpSink = gst_element_factory_make ("udpsink", NULL);
-  g_object_set (rtpSrc, "port", basePort, "caps", session->caps, NULL);
-  g_object_set (rtcpSink, "port", basePort + 5, "host", "127.0.0.1", "sync",
-      FALSE, "async", FALSE, NULL);
-  g_object_set (rtcpSrc, "port", basePort + 1, NULL);
-
-  g_print ("Connecting to %i/%i/%i\n", basePort, basePort + 1, basePort + 5);
-
-  /* enable RFC4588 retransmission handling by setting rtprtxreceive
-   * as the "aux" element of rtpbin */
-  //g_signal_connect (rtpBin, "request-aux-receiver", (GCallback) request_aux_receiver, session);
-
-  gst_bin_add_many (GST_BIN (pipeline), rtpSrc, rtcpSrc, rtcpSink, NULL);
-
-  g_signal_connect_data (rtpBin, "pad-added", G_CALLBACK (handle_new_stream),
-      session_ref (session), (GClosureNotify) session_unref, 0);
-
-  g_signal_connect_data (rtpBin, "request-pt-map", G_CALLBACK (request_pt_map),
-      session_ref (session), (GClosureNotify) session_unref, 0);
-
-  padName = g_strdup_printf ("recv_rtp_sink_%u", session->sessionNum);
-  gst_element_link_pads (rtpSrc, "src", rtpBin, padName);
-  g_free (padName);
-
-  padName = g_strdup_printf ("recv_rtcp_sink_%u", session->sessionNum);
-  gst_element_link_pads (rtcpSrc, "src", rtpBin, padName);
-  g_free (padName);
-
-  padName = g_strdup_printf ("send_rtcp_src_%u", session->sessionNum);
-  gst_element_link_pads (rtpBin, padName, rtcpSink, "sink");
-  g_free (padName);
-
-  session_unref (session);
-}
-
+/* build a pipeline equivalent to:
+ *
+ * gst-launch-1.0 -v rtpbin name=rtpbin                                                \
+ *      udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_0              \
+ *        rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! autoaudiosink \
+ *      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0                              \
+ *        rtpbin.send_rtcp_src_0 ! udpsink port=5007 host=$DEST sync=false async=false
+ */
 int
-main (int argc, char **argv)
+main (int argc, char *argv[])
 {
-  GstPipeline *pipe;
-  SessionData *videoSession;
-  SessionData *audioSession;
-  GstElement *rtpBin;
-  GstBus *bus;
+  GstElement *rtpbin, *rtpsrc, *rtcpsrc, *rtcpsink;
+  GstElement *audiodepay, *audiodec, *audiores, *audioconv, *audiosink;
+  GstElement *pipeline;
+  GMainLoop *loop;
+  GstCaps *caps;
+  gboolean res;
+  GstPadLinkReturn lres;
+  GstPad *srcpad, *sinkpad;
 
+  /* always init first */
   gst_init (&argc, &argv);
 
+  /* the pipeline to hold everything */
+  pipeline = gst_pipeline_new (NULL);
+  g_assert (pipeline);
+
+  /* the udp src and source we will use for RTP and RTCP */
+  rtpsrc = gst_element_factory_make ("udpsrc", "rtpsrc");
+  g_assert (rtpsrc);
+  g_object_set (rtpsrc, "port", 5002, NULL);
+  /* we need to set caps on the udpsrc for the RTP data */
+  caps = gst_caps_from_string (AUDIO_CAPS);
+  g_object_set (rtpsrc, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  rtcpsrc = gst_element_factory_make ("udpsrc", "rtcpsrc");
+  g_assert (rtcpsrc);
+  g_object_set (rtcpsrc, "port", 5003, NULL);
+
+  rtcpsink = gst_element_factory_make ("udpsink", "rtcpsink");
+  g_assert (rtcpsink);
+  g_object_set (rtcpsink, "port", 5007, "host", DEST_HOST, NULL);
+  /* no need for synchronisation or preroll on the RTCP sink */
+  g_object_set (rtcpsink, "async", FALSE, "sync", FALSE, NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), rtpsrc, rtcpsrc, rtcpsink, NULL);
+
+  /* the depayloading and decoding */
+  audiodepay = gst_element_factory_make (AUDIO_DEPAY, "audiodepay");
+  g_assert (audiodepay);
+  audiodec = gst_element_factory_make (AUDIO_DEC, "audiodec");
+  g_assert (audiodec);
+  /* the audio playback and format conversion */
+  audioconv = gst_element_factory_make ("audioconvert", "audioconv");
+  g_assert (audioconv);
+  audiores = gst_element_factory_make ("audioresample", "audiores");
+  g_assert (audiores);
+  audiosink = gst_element_factory_make (AUDIO_SINK, "audiosink");
+  g_assert (audiosink);
+
+  /* add depayloading and playback to the pipeline and link */
+  gst_bin_add_many (GST_BIN (pipeline), audiodepay, audiodec, audioconv,
+      audiores, audiosink, NULL);
+
+  res = gst_element_link_many (audiodepay, audiodec, audioconv, audiores,
+      audiosink, NULL);
+  g_assert (res == TRUE);
+
+  /* the rtpbin element */
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
+  g_assert (rtpbin);
+
+  gst_bin_add (GST_BIN (pipeline), rtpbin);
+
+  /* now link all to the rtpbin, start by getting an RTP sinkpad for session 0 */
+  srcpad = gst_element_get_static_pad (rtpsrc, "src");
+  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_0");
+  lres = gst_pad_link (srcpad, sinkpad);
+  g_assert (lres == GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
+
+  /* get an RTCP sinkpad in session 0 */
+  srcpad = gst_element_get_static_pad (rtcpsrc, "src");
+  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtcp_sink_0");
+  lres = gst_pad_link (srcpad, sinkpad);
+  g_assert (lres == GST_PAD_LINK_OK);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+
+  /* get an RTCP srcpad for sending RTCP back to the sender */
+  srcpad = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
+  sinkpad = gst_element_get_static_pad (rtcpsink, "sink");
+  lres = gst_pad_link (srcpad, sinkpad);
+  g_assert (lres == GST_PAD_LINK_OK);
+  gst_object_unref (sinkpad);
+
+  /* the RTP pad that we have to connect to the depayloader will be created
+   * dynamically so we connect to the pad-added signal, pass the depayloader as
+   * user_data so that we can link to it. */
+  g_signal_connect (rtpbin, "pad-added", G_CALLBACK (pad_added_cb), audiodepay);
+
+  /* give some stats when we receive RTCP */
+  g_signal_connect (rtpbin, "on-ssrc-active", G_CALLBACK (on_ssrc_active_cb),
+      audiodepay);
+
+  /* set the pipeline to playing */
+  g_print ("starting receiver pipeline\n");
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
+
+  /* we need to run a GLib main loop to get the messages */
   loop = g_main_loop_new (NULL, FALSE);
-  pipe = GST_PIPELINE (gst_pipeline_new (NULL));
-
-  bus = gst_element_get_bus (GST_ELEMENT (pipe));
-  g_signal_connect (bus, "message::error", G_CALLBACK (cb_error), pipe);
-  g_signal_connect (bus, "message::warning", G_CALLBACK (cb_warning), pipe);
-  g_signal_connect (bus, "message::state-changed", G_CALLBACK (cb_state), pipe);
-  g_signal_connect (bus, "message::eos", G_CALLBACK (cb_eos), NULL);
-  gst_bus_add_signal_watch (bus);
-  gst_object_unref (bus);
-
-  rtpBin = gst_element_factory_make ("rtpbin", NULL);
-  gst_bin_add (GST_BIN (pipe), rtpBin);
-  g_object_set (rtpBin, "latency", 200, "do-retransmission", TRUE,
-      /*"rtp-profile", GST_RTP_PROFILE_AVPF,*/ NULL);
-
-  videoSession = make_video_session (0);
-  audioSession = make_audio_session (1);
-
-  join_session (GST_ELEMENT (pipe), rtpBin, videoSession);
-  join_session (GST_ELEMENT (pipe), rtpBin, audioSession);
-
-  g_print ("starting client pipeline\n");
-  gst_element_set_state (GST_ELEMENT (pipe), GST_STATE_PLAYING);
-
   g_main_loop_run (loop);
 
-  g_print ("stoping client pipeline\n");
-  gst_element_set_state (GST_ELEMENT (pipe), GST_STATE_NULL);
+  g_print ("stopping receiver pipeline\n");
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
-  gst_object_unref (pipe);
-  g_main_loop_unref (loop);
+  gst_object_unref (pipeline);
 
   return 0;
 }
