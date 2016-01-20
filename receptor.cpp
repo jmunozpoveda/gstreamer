@@ -22,29 +22,13 @@
 #include <stdio.h>
 #include <gst/gst.h>
 #include <gio/gio.h>
-/*
- * A simple RTP receiver 
- *
- *  receives alaw encoded RTP audio on port 5002, RTCP is received on  port 5003.
- *  the receiver RTCP reports are sent to port 5003
- *
- *             .-------.      .----------.     .---------.   .-------.   .--------.
- *  RTP        |udpsrc |      | rtpbin   |     |pcmadepay|   |alawdec|   |alsasink|
- *  port=5002  |      src->recv_rtp recv_rtp->sink     src->sink   src->sink      |
- *             '-------'      |          |     '---------'   '-------'   '--------'
- *                            |          |      
- *                            |          |     .-------.
- *                            |          |     |udpsink|  RTCP
- *                            |    send_rtcp->sink     | port=5003
- *             .-------.      |          |     '-------' sync=false
- *  RTCP       |udpsrc |      |          |               async=false
- *  port=5003  |     src->recv_rtcp      |                       
- *             '-------'      '----------'              
- */
 
-/* the caps of the sender RTP stream. This is usually negotiated out of band with
- * SDP or RTSP. */
-//#define AUDIO_CAPS "application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)AMR"
+
+#define RTP_RX  5002
+#define RTCP_RX 5003
+#define RECV_FILENAME "rx.wav"
+
+
 #define AUDIO_CAPS "application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)AMR,encoding-params=(string)1,octet-align=(string)1" 
 
 
@@ -53,9 +37,6 @@
 #define GST_ON_BYE_SSRC         "on-bye-ssrc"
 #define GST_ON_BYE_TIME_OUT     "on-bye-timeout"
 
-/* the destination machine to send RTCP to. This is the address of the sender and
- * is used to send back the RTCP reports of this receiver. If the data is sent
- * from another machine, change this address. */
 #define DEST_HOST "127.0.0.1"
 
 /* print the stats of a source */
@@ -130,25 +111,18 @@ static void timeout_callback(GstElement* element, guint session, guint ssrc, gpo
     	printf( "GST: Sending EOS TO THE pipeline !!!!\n");
     else 
         printf( "GST: Sending EOS TO THE pipeline in case:%s !!!!\n",(char *)user_data);
-	gst_element_send_event(pipeline, gst_event_new_eos());
+	
+    
+    gst_element_send_event(pipeline, gst_event_new_eos());
 }
 
-/* build a pipeline equivalent to:
- *
- * gst-launch-1.0 -v rtpbin name=rtpbin                                                \
- *      udpsrc caps=$AUDIO_CAPS port=5002 ! rtpbin.recv_rtp_sink_0              \
- *        rtpbin. ! rtppcmadepay ! alawdec ! audioconvert ! audioresample ! autoaudiosink \
- *      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_0                              \
- *        rtpbin.send_rtcp_src_0 ! udpsink port=5003 host=$DEST sync=false async=false
- */
-int
-main (int argc, char *argv[])
+int main (int argc, char *argv[])
 {
-  GstElement *rtpbin, *rtpsrc, *rtcpsrc, *rtcpsink;
-  GstElement *audiodepay, *wavenc, *audiores, *audioconvert, *audiosink, *amrdecoder;
+  GstElement *rtpbin, *rtpsrc_rx, *rtcpsrc_rx, *rtcpsink_rx;
+  GstElement *audiodepay_rx, *wavenc_rx, *audioconvert_rx, *audiosink_rx, *amrdecoder_rx;
 
   GMainLoop *loop;
-  GstCaps *caps;
+  GstCaps *caps_rx;
   gboolean res;
   GstPadLinkReturn lres;
   GstPad *srcpad, *sinkpad;
@@ -161,56 +135,45 @@ main (int argc, char *argv[])
   g_assert (pipeline);
 
   /* the udp src and source we will use for RTP and RTCP */
-  rtpsrc = gst_element_factory_make ("udpsrc", "rtpsrc");
-  g_assert (rtpsrc);
-  g_object_set (rtpsrc, "port", 5002, NULL);
-  /* we need to set caps on the udpsrc for the RTP data */
-  caps = gst_caps_from_string (AUDIO_CAPS);
-  g_object_set (rtpsrc, "caps", caps, NULL);
-  gst_caps_unref (caps);
+  rtpsrc_rx = gst_element_factory_make ("udpsrc", "rtpsrc_rx");
+  g_assert (rtpsrc_rx);
+  g_object_set (rtpsrc_rx, "port", RTP_RX, NULL);
+  /* we need to set caps_rx on the udpsrc for the RTP data */
+  caps_rx = gst_caps_from_string (AUDIO_CAPS);
+  g_object_set (rtpsrc_rx, "caps", caps_rx, NULL);
+  gst_caps_unref (caps_rx);
 
-  rtcpsrc = gst_element_factory_make ("udpsrc", "rtcpsrc");
-  g_assert (rtcpsrc);
-  g_object_set (rtcpsrc, "port", 5003, NULL);
+  rtcpsrc_rx = gst_element_factory_make ("udpsrc", "rtcpsrc_rx");
+  g_assert (rtcpsrc_rx);
+  g_object_set (rtcpsrc_rx, "port", RTCP_RX, NULL);
 
-  rtcpsink = gst_element_factory_make ("udpsink", "rtcpsink");
-  g_assert (rtcpsink);
+  rtcpsink_rx = gst_element_factory_make ("udpsink", "rtcpsink_rx");
+  g_assert (rtcpsink_rx);
   
-  //cojo el fd del socket del rtcpsrc y se lo fijo al rtcpsink y no hago la linea  de abajo
-  //g_object_set (rtcpsink, "port", 5003, "host", DEST_HOST, NULL);
   GSocket* socket = NULL;
-    g_object_get(rtcpsrc,  "socket", &socket, NULL);
-    g_object_set(rtcpsink, "socket", socket, NULL);
+  g_object_get(rtcpsrc_rx,  "socket", &socket, NULL);
+  g_object_set(rtcpsink_rx, "socket", socket, NULL);
 
     
-  
-  
   /* no need for synchronisation or preroll on the RTCP sink */
-  g_object_set (rtcpsink, "async", FALSE, "sync", FALSE, NULL);
+  g_object_set (rtcpsink_rx, "async", FALSE, "sync", FALSE, NULL);
 
-  gst_bin_add_many (GST_BIN (pipeline), rtpsrc, rtcpsrc, rtcpsink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), rtpsrc_rx, rtcpsrc_rx, rtcpsink_rx, NULL);
 
   /* the depayloading and decoding */
-  audiodepay = gst_element_factory_make ("rtpamrdepay", "rtpamrdepay");
-    g_assert (audiodepay);
-  amrdecoder = gst_element_factory_make ("amrnbdec", "amrnbdec");
-    g_assert (amrdecoder);
-  wavenc = gst_element_factory_make   ("wavenc", "wavenc");
-    g_assert (wavenc);
-  audiores = gst_element_factory_make   ("audioresample", "audiores");
-    g_assert (audiores);
-  audioconvert = gst_element_factory_make  ("audioconvert", "audioconvert");
-    g_assert (audioconvert);
-  audiosink = gst_element_factory_make  ("filesink", "filesink");
-    g_assert (audiosink);
+  audiodepay_rx = gst_element_factory_make ("rtpamrdepay", "rtpamrdepay_tx");
+  amrdecoder_rx = gst_element_factory_make ("amrnbdec", "amrnbdec");
+  wavenc_rx = gst_element_factory_make   ("wavenc", "wavenc_rx");
+  audioconvert_rx = gst_element_factory_make  ("audioconvert", "audioconvert_rx");
+  audiosink_rx = gst_element_factory_make  ("filesink", "filesink");
     
     
-  g_object_set(audiosink, "location", "recv_A.wav", NULL);
+  g_object_set(audiosink_rx, "location", RECV_FILENAME, NULL);
 
   /* add depayloading and playback to the pipeline and link */
-  gst_bin_add_many (GST_BIN (pipeline), audiodepay, amrdecoder, audioconvert,  wavenc, audiosink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), audiodepay_rx, amrdecoder_rx, audioconvert_rx,  wavenc_rx, audiosink_rx, NULL);
  
-  res = gst_element_link_many (audiodepay, amrdecoder, audioconvert,  wavenc,  audiosink, NULL);
+  res = gst_element_link_many (audiodepay_rx, amrdecoder_rx, audioconvert_rx,  wavenc_rx,  audiosink_rx, NULL);
   g_assert (res == TRUE);
 
   /* the rtpbin element */
@@ -220,23 +183,23 @@ main (int argc, char *argv[])
   gst_bin_add (GST_BIN (pipeline), rtpbin);
 
   /* now link all to the rtpbin, start by getting an RTP sinkpad for session 0 */
-  srcpad = gst_element_get_static_pad (rtpsrc, "src");
-  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_0");
+  srcpad = gst_element_get_static_pad (rtpsrc_rx, "src");
+  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_1");
   lres = gst_pad_link (srcpad, sinkpad);
   g_assert (lres == GST_PAD_LINK_OK);
   gst_object_unref (srcpad);
 
   /* get an RTCP sinkpad in session 0 */
-  srcpad = gst_element_get_static_pad (rtcpsrc, "src");
-  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtcp_sink_0");
+  srcpad = gst_element_get_static_pad (rtcpsrc_rx, "src");
+  sinkpad = gst_element_get_request_pad (rtpbin, "recv_rtcp_sink_1");
   lres = gst_pad_link (srcpad, sinkpad);
   g_assert (lres == GST_PAD_LINK_OK);
   gst_object_unref (srcpad);
   gst_object_unref (sinkpad);
 
   /* get an RTCP srcpad for sending RTCP back to the sender */
-  srcpad = gst_element_get_request_pad (rtpbin, "send_rtcp_src_0");
-  sinkpad = gst_element_get_static_pad (rtcpsink, "sink");
+  srcpad = gst_element_get_request_pad (rtpbin, "send_rtcp_src_1");
+  sinkpad = gst_element_get_static_pad (rtcpsink_rx, "sink");
   lres = gst_pad_link (srcpad, sinkpad);
   g_assert (lres == GST_PAD_LINK_OK);
   gst_object_unref (sinkpad);
@@ -244,16 +207,15 @@ main (int argc, char *argv[])
   /* the RTP pad that we have to connect to the depayloader will be created
    * dynamically so we connect to the pad-added signal, pass the depayloader as
    * user_data so that we can link to it. */
-  g_signal_connect (rtpbin, "pad-added", G_CALLBACK (pad_added_cb), audiodepay);
+  g_signal_connect (rtpbin, "pad-added", G_CALLBACK (pad_added_cb), audiodepay_rx);
     /* give some stats when we receive RTCP */
-  g_signal_connect (rtpbin, "on-ssrc-active", G_CALLBACK (on_ssrc_active_cb),
-      audiodepay);
+  g_signal_connect (rtpbin, "on-ssrc-active", G_CALLBACK (on_ssrc_active_cb),     audiodepay_rx);
     
     
-    g_signal_connect(rtpbin, "on-sender-timeout", G_CALLBACK(timeout_callback), (gpointer) GST_ON_SENDER_TIMEOUT);
-    g_signal_connect(rtpbin, "on-timeout", G_CALLBACK(timeout_callback), (gpointer) GST_ON_TIMEOUT);
-    g_signal_connect(rtpbin, "on-bye-ssrc", G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_SSRC);
-    g_signal_connect(rtpbin, "on-bye-timeout", G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_TIME_OUT);
+  g_signal_connect(rtpbin, "on-sender-timeout", G_CALLBACK(timeout_callback), (gpointer) GST_ON_SENDER_TIMEOUT);
+  g_signal_connect(rtpbin, "on-timeout",        G_CALLBACK(timeout_callback), (gpointer) GST_ON_TIMEOUT);
+  g_signal_connect(rtpbin, "on-bye-ssrc",       G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_SSRC);
+  g_signal_connect(rtpbin, "on-bye-timeout",    G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_TIME_OUT);
 
     
     
@@ -263,7 +225,6 @@ main (int argc, char *argv[])
   g_print ("starting receiver pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  /* we need to run a GLib main loop to get the messages */
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
 
