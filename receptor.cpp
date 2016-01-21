@@ -128,7 +128,7 @@ my_bus_callback (GstBus     *bus,
       g_main_loop_quit (loop);
       break;
     default:
-      /* unhandled message */
+
       break;
   }
   
@@ -144,6 +144,7 @@ static void timeout_callback(GstElement* element, guint session, guint ssrc, gpo
 	
     
     gst_element_send_event(pipeline, gst_event_new_eos());
+    g_main_loop_quit (loop);
 }
 
 int main (int argc, char *argv[])
@@ -241,13 +242,12 @@ int main (int argc, char *argv[])
     /* give some stats when we receive RTCP */
   g_signal_connect (rtpbin, "on-ssrc-active", G_CALLBACK (on_ssrc_active_cb),     audiodepay_rx);
     
-    
   g_signal_connect(rtpbin, "on-sender-timeout", G_CALLBACK(timeout_callback), (gpointer) GST_ON_SENDER_TIMEOUT);
   g_signal_connect(rtpbin, "on-timeout",        G_CALLBACK(timeout_callback), (gpointer) GST_ON_TIMEOUT);
   g_signal_connect(rtpbin, "on-bye-ssrc",       G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_SSRC);
   g_signal_connect(rtpbin, "on-bye-timeout",    G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_TIME_OUT);
 
-    GstBus* bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  GstBus* bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   guint bus_watch_id = gst_bus_add_watch (bus, my_bus_callback, NULL);
   gst_object_unref (bus);
 
