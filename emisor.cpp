@@ -13,10 +13,10 @@
 
 #define RTP_TX  5002
 #define RTCP_TX 5003
-#define RTP_RX  5002
-#define RTCP_RX 5003
+#define RTP_RX  5000
+#define RTCP_RX 5001
 
-#define RECV_FILENAME "tx.wav"
+#define RECV_FILENAME "recibidoA.wav"
 
 #define AUDIO_CAPS "application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)AMR,encoding-params=(string)1,octet-align=(string)1" 
 
@@ -36,12 +36,14 @@
   
   static void print_source_stats (GObject * source)
 {
-  GstStructure *stats;
+  GstStructure *stats=NULL;
   gchar *str;
 
   /* get the source stats */
   g_object_get (source, "stats", &stats, NULL);
 
+  if(stats==NULL)
+    return;
   /* simply dump the stats structure */
   str = gst_structure_to_string (stats);
   g_print ("source stats: %s\n", str);
@@ -84,7 +86,7 @@ static gboolean print_stats (GstElement * rtpbin)
   
 static void on_ssrc_active_cb (GstElement * rtpbin, guint sessid, guint ssrc,  GstElement * depay)
 {
-  GObject *session, *isrc, *osrc;
+  GObject *session, *isrc=NULL, *osrc=NULL;
 
   g_print ("got RTCP from session %u, SSRC %u\n", sessid, ssrc);
 
@@ -93,11 +95,13 @@ static void on_ssrc_active_cb (GstElement * rtpbin, guint sessid, guint ssrc,  G
 
   /* get the internal source (the SSRC allocated to us, the receiver */
   g_object_get (session, "internal-source", &isrc, NULL);
-  print_source_stats (isrc);
+  if(isrc)
+    print_source_stats (isrc);
 
   /* get the remote source that sent us RTCP */
   g_signal_emit_by_name (session, "get-source-by-ssrc", ssrc, &osrc);
-  print_source_stats (osrc);
+  if(osrc)
+    print_source_stats (osrc);
 }
 
 /* will be called when rtpbin has validated a payload that we can depayload */
