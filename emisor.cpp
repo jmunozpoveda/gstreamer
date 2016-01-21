@@ -19,6 +19,38 @@
 #define DEST_HOST "127.0.0.1"
 
 
+  GMainLoop *loop;
+static gboolean
+my_bus_callback (GstBus     *bus,
+		 GstMessage *message,
+		 gpointer    data)
+{
+  g_print ("Got %s message\n", GST_MESSAGE_TYPE_NAME (message));
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &err, &debug);
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+  
+}
+
 static void print_source_stats (GObject * source)
 {
   GstStructure *stats;
@@ -73,7 +105,7 @@ int main (int argc, char *argv[])
   GstElement *audiosrc_tx, *audioconv_tx, *audiores_tx, *audioenc_tx, *audiopay_tx, *wavparse_tx;
   GstElement *rtpbin, *rtpsink_tx, *rtcpsink_tx, *rtcpsrc_tx;
   GstElement *pipeline;
-  GMainLoop *loop;
+  
   GstPad *srcpad, *sinkpad;
 
   /* always init first */
@@ -157,6 +189,12 @@ int main (int argc, char *argv[])
     g_error ("Failed to link rtcpsrc_tx to rtpbin");
   gst_object_unref (srcpad);
 
+  
+    GstBus* bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  guint bus_watch_id = gst_bus_add_watch (bus, my_bus_callback, NULL);
+  gst_object_unref (bus);
+
+  
   /* set the pipeline to playing */
   g_print ("starting sender pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);

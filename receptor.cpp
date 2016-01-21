@@ -102,7 +102,37 @@ pad_added_cb (GstElement * rtpbin, GstPad * new_pad, GstElement * depay)
   g_assert (lres == GST_PAD_LINK_OK);
   gst_object_unref (sinkpad);
 }
+  GMainLoop *loop;
+static gboolean
+my_bus_callback (GstBus     *bus,
+		 GstMessage *message,
+		 gpointer    data)
+{
+  g_print ("Got %s message\n", GST_MESSAGE_TYPE_NAME (message));
 
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR: {
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &err, &debug);
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+  
+}
 
  GstElement *pipeline;
 static void timeout_callback(GstElement* element, guint session, guint ssrc, gpointer user_data)
@@ -121,7 +151,7 @@ int main (int argc, char *argv[])
   GstElement *rtpbin, *rtpsrc_rx, *rtcpsrc_rx, *rtcpsink_rx;
   GstElement *audiodepay_rx, *wavenc_rx, *audioconvert_rx, *audiosink_rx, *amrdecoder_rx;
 
-  GMainLoop *loop;
+  
   GstCaps *caps_rx;
   gboolean res;
   GstPadLinkReturn lres;
@@ -217,14 +247,15 @@ int main (int argc, char *argv[])
   g_signal_connect(rtpbin, "on-bye-ssrc",       G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_SSRC);
   g_signal_connect(rtpbin, "on-bye-timeout",    G_CALLBACK(timeout_callback), (gpointer) GST_ON_BYE_TIME_OUT);
 
-    
-    
+    GstBus* bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  guint bus_watch_id = gst_bus_add_watch (bus, my_bus_callback, NULL);
+  gst_object_unref (bus);
 
 
   /* set the pipeline to playing */
   g_print ("starting receiver pipeline\n");
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-
+  
   loop = g_main_loop_new (NULL, FALSE);
   g_main_loop_run (loop);
 
