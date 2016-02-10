@@ -1,0 +1,308 @@
+GST_INIT gstmessage.c:123:_priv_gst_message_initialize: init messages
+GST_INIT gstcontext.c:77:_priv_gst_context_initialize: init contexts
+GST_PLUGIN_LOADING gstplugin.c:317:_priv_gst_plugin_initialize: registering 0 static plugins
+GST_PLUGIN_LOADING gstplugin.c:225:gst_plugin_register_static: registered static plugin "staticelements"
+GST_PLUGIN_LOADING gstplugin.c:227:gst_plugin_register_static: added static plugin "staticelements", result: 1
+GST_REGISTRY gstregistry.c:1680:ensure_current_registry: reading registry cache: /home/julian/.cache/gstreamer-1.0/registry.x86_64.bin
+GST_REGISTRY gstregistrybinary.c:617:priv_gst_registry_binary_read_cache: loaded /home/julian/.cache/gstreamer-1.0/registry.x86_64.bin in 0.012946 seconds
+GST_REGISTRY gstregistry.c:1539:scan_and_update_registry: Validating plugins from registry cache: /home/julian/.cache/gstreamer-1.0/registry.x86_64.bin
+GST_REGISTRY gstregistry.c:1638:scan_and_update_registry: Registry cache has not changed
+GST_REGISTRY gstregistry.c:1715:ensure_current_registry: registry reading and updating done, result = 1
+GST_INIT gst.c:707:init_post: GLib runtime version: 2.40.2
+GST_INIT gst.c:709:init_post: GLib headers version: 2.40.0
+GST_PIPELINE gstparse.c:322:gst_parse_launch_full: parsing pipeline description 'filesrc location=ref.mp4 ! qtdemux ! h264parse ! rtph264pay ! udpsink port=5000 '
+GST_PLUGIN_LOADING gstplugin.c:830:gst_plugin_load_file: plugin "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstcoreelements.so" loaded
+GST_ELEMENT_FACTORY gstelementfactory.c:365:gst_element_factory_create: creating element "filesrc"
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<GstBaseSrc@0x259a110> adding pad 'src'
+filesrc gstfilesrc.c:253:gst_file_src_set_location: filename : ref.mp4
+filesrc gstfilesrc.c:254:gst_file_src_set_location: uri      : file:///home/julian/gstreamer/gstreamer/h264/ref.mp4
+GST_PLUGIN_LOADING gstplugin.c:830:gst_plugin_load_file: plugin "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstisomp4.so" loaded
+GST_ELEMENT_FACTORY gstelementfactory.c:365:gst_element_factory_create: creating element "qtdemux"
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<GstQTDemux@0x25b0080> adding pad 'sink'
+GST_PLUGIN_LOADING gstplugin.c:830:gst_plugin_load_file: plugin "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstvideoparsersbad.so" loaded
+GST_ELEMENT_FACTORY gstelementfactory.c:365:gst_element_factory_create: creating element "h264parse"
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<GstBaseParse@0x25b6a30> adding pad 'sink'
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<GstBaseParse@0x25b6a30> adding pad 'src'
+baseparse gstbaseparse.c:3583:gst_base_parse_set_pts_interpolation:<GstH264Parse@0x25b6a30> PTS interpolation: no
+GST_PLUGIN_LOADING gstplugin.c:830:gst_plugin_load_file: plugin "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstrtp.so" loaded
+GST_ELEMENT_FACTORY gstelementfactory.c:365:gst_element_factory_create: creating element "rtph264pay"
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<GstRTPBasePayload@0x25c40d0> adding pad 'src'
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<GstRTPBasePayload@0x25c40d0> adding pad 'sink'
+GST_PLUGIN_LOADING gstplugin.c:830:gst_plugin_load_file: plugin "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgstudp.so" loaded
+GST_ELEMENT_FACTORY gstelementfactory.c:365:gst_element_factory_create: creating element "udpsink"
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<GstBaseSink@0x25cbc70> adding pad 'sink'
+GST_ELEMENT_FACTORY gstelementfactory.c:365:gst_element_factory_create: creating element "pipeline"
+GST_PIPELINE ./grammar.y:578:gst_parse_perform_link: linking filesrc0:(any) to qtdemux0:(any) (0/0) with caps "(NULL)"
+GST_ELEMENT_PADS gstutils.c:1543:gst_element_link_pads_full: trying to link element filesrc0:(any) to element qtdemux0:(any)
+GST_PADS gstutils.c:936:gst_pad_check_link: trying to link filesrc0:src and qtdemux0:sink
+GST_PADS gstutils.c:1443:prepare_link_maybe_ghosting: filesrc0 and qtdemux0 in same bin, no need for ghost pads
+GST_PADS gstpad.c:2120:gst_pad_link_prepare: trying to link filesrc0:src and qtdemux0:sink
+GST_PADS gstpad.c:2322:gst_pad_link_full: linked filesrc0:src and qtdemux0:sink, successful
+GST_EVENT gstevent.c:1313:gst_event_new_reconfigure: creating reconfigure event
+GST_EVENT gstpad.c:5083:gst_pad_send_event_unchecked:<filesrc0:src> Received event on flushing pad. Discarding
+GST_PIPELINE ./grammar.y:578:gst_parse_perform_link: linking qtdemux0:(any) to h264parse0:(any) (0/0) with caps "(NULL)"
+GST_ELEMENT_PADS gstutils.c:1543:gst_element_link_pads_full: trying to link element qtdemux0:(any) to element h264parse0:(any)
+GST_PADS gstpad.c:3675:gst_pad_peer_query:<h264parse0:src> pad has no peer
+GST_ELEMENT_PADS gstelement.c:894:gst_element_get_static_pad: no such pad 'video_%u' in element "qtdemux0"
+GST_ELEMENT_PADS gstutils.c:1123:gst_element_get_compatible_pad:<qtdemux0> Could not find a compatible pad to link to h264parse0:sink
+default gstutils.c:1889:gst_element_link_pads_filtered: Could not link pads: qtdemux0:(null) - h264parse0:(null)
+GST_PIPELINE ./grammar.y:578:gst_parse_perform_link: linking h264parse0:(any) to rtph264pay0:(any) (0/0) with caps "(NULL)"
+GST_ELEMENT_PADS gstutils.c:1543:gst_element_link_pads_full: trying to link element h264parse0:(any) to element rtph264pay0:(any)
+GST_PADS gstutils.c:936:gst_pad_check_link: trying to link h264parse0:src and rtph264pay0:sink
+GST_PADS gstpad.c:3675:gst_pad_peer_query:<rtph264pay0:src> pad has no peer
+GST_PADS gstutils.c:1443:prepare_link_maybe_ghosting: h264parse0 and rtph264pay0 in same bin, no need for ghost pads
+GST_PADS gstpad.c:2120:gst_pad_link_prepare: trying to link h264parse0:src and rtph264pay0:sink
+GST_PADS gstpad.c:3675:gst_pad_peer_query:<rtph264pay0:src> pad has no peer
+GST_PADS gstpad.c:2322:gst_pad_link_full: linked h264parse0:src and rtph264pay0:sink, successful
+GST_EVENT gstevent.c:1313:gst_event_new_reconfigure: creating reconfigure event
+GST_EVENT gstpad.c:5083:gst_pad_send_event_unchecked:<h264parse0:src> Received event on flushing pad. Discarding
+GST_PIPELINE ./grammar.y:578:gst_parse_perform_link: linking rtph264pay0:(any) to udpsink0:(any) (0/0) with caps "(NULL)"
+GST_ELEMENT_PADS gstutils.c:1543:gst_element_link_pads_full: trying to link element rtph264pay0:(any) to element udpsink0:(any)
+GST_PADS gstutils.c:936:gst_pad_check_link: trying to link rtph264pay0:src and udpsink0:sink
+GST_PADS gstutils.c:1443:prepare_link_maybe_ghosting: rtph264pay0 and udpsink0 in same bin, no need for ghost pads
+GST_PADS gstpad.c:2120:gst_pad_link_prepare: trying to link rtph264pay0:src and udpsink0:sink
+GST_PADS gstpad.c:2322:gst_pad_link_full: linked rtph264pay0:src and udpsink0:sink, successful
+GST_EVENT gstevent.c:1313:gst_event_new_reconfigure: creating reconfigure event
+GST_EVENT gstpad.c:5083:gst_pad_send_event_unchecked:<rtph264pay0:src> Received event on flushing pad. Discarding
+Setting pipeline to PAUSED ...
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<udpsink0> current NULL pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<udpsink0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<udpsink0> notifying about state-changed NULL to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'udpsink0' changed state to 2(READY) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<rtph264pay0> current NULL pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<rtph264pay0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<rtph264pay0> notifying about state-changed NULL to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'rtph264pay0' changed state to 2(READY) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<h264parse0> current NULL pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<h264parse0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<h264parse0> notifying about state-changed NULL to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'h264parse0' changed state to 2(READY) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<qtdemux0> current NULL pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<qtdemux0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<qtdemux0> notifying about state-changed NULL to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'qtdemux0' changed state to 2(READY) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<filesrc0> current NULL pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<filesrc0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<filesrc0> notifying about state-changed NULL to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'filesrc0' changed state to 2(READY) successfully
+GST_STATES gstelement.c:2303:gst_element_continue_state:<pipeline0> committing state from NULL to READY, pending PAUSED, next PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<pipeline0> notifying about state-changed NULL to READY (PAUSED pending)
+GST_STATES gstelement.c:2310:gst_element_continue_state:<pipeline0> continue state change READY to PAUSED, final PAUSED
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<udpsink0> current READY pending VOID_PENDING, desired next PAUSED
+GST_STATES gstbin.c:2662:gst_bin_change_state_func:<pipeline0> child 'udpsink0' is changing state asynchronously to PAUSED
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<rtph264pay0> current READY pending VOID_PENDING, desired next PAUSED
+GST_STATES gstelement.c:2328:gst_element_continue_state:<rtph264pay0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<rtph264pay0> notifying about state-changed READY to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'rtph264pay0' changed state to 3(PAUSED) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<h264parse0> current READY pending VOID_PENDING, desired next PAUSED
+GST_PADS gstpad.c:3675:gst_pad_peer_query:<h264parse0:sink> pad has no peer
+GST_STATES gstelement.c:2328:gst_element_continue_state:<h264parse0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<h264parse0> notifying about state-changed READY to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'h264parse0' changed state to 3(PAUSED) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<qtdemux0> current READY pending VOID_PENDING, desired next PAUSED
+filesrc gstfilesrc.c:450:gst_file_src_start:<filesrc0> opening file ref.mp4
+filesrc gstfilesrc.c:450:gst_file_src_start:<filesrc0> opening file ref.mp4
+task gsttask.c:431:gst_task_set_lock: setting stream lock 0x259c320 on task 0x25d7050
+GST_PADS gstpad.c:5415:gst_pad_start_task:<qtdemux0:sink> created task 0x25d7050
+GST_STATES gstelement.c:2328:gst_element_continue_state:<qtdemux0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<qtdemux0> notifying about state-changed READY to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'qtdemux0' changed state to 3(PAUSED) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<filesrc0> current READY pending VOID_PENDING, desired next PAUSED
+GST_STATES gstelement.c:2328:gst_element_continue_state:<filesrc0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<filesrc0> notifying about state-changed READY to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'filesrc0' changed state to 3(PAUSED) successfully
+Pipeline is PREROLLING ...
+qtdemux qtdemux.c:9914:qtdemux_parse_tree:<qtdemux0> timescale: 1000
+qtdemux qtdemux.c:9915:qtdemux_parse_tree:<qtdemux0> duration: 8000
+qtdemux qtdemux.c:7823:qtdemux_parse_trak:<qtdemux0> type avc1 caps video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high-4:2:2, codec_data=(buffer)017a001effe10018677a001ebcd940a03da10000030001000003003c0f162d9601000568ebecb22c
+GST_SCHEDULING gstpad.c:4275:gst_pad_get_range_unchecked:<filesrc0:src> getrange failed, flow: eos
+GST_SCHEDULING gstpad.c:4478:gst_pad_pull_range:<qtdemux0:sink> pullrange failed, flow: eos
+GST_ELEMENT_PADS gstelement.c:897:gst_element_get_static_pad: found pad qtdemux0:sink
+GST_EVENT gstevent.c:628:gst_event_new_caps: creating caps event video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high-4:2:2, codec_data=(buffer)017a001effe10018677a001ebcd940a03da10000030001000003003c0f162d9601000568ebecb22c, width=(int)640, height=(int)480, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1
+GST_ELEMENT_PADS gstelement.c:646:gst_element_add_pad:<qtdemux0> adding pad 'video_0'
+GST_PIPELINE ./grammar.y:506:gst_parse_found_pad: trying delayed linking qtdemux0:(NULL) to h264parse0:(NULL)
+GST_ELEMENT_PADS gstutils.c:1543:gst_element_link_pads_full: trying to link element qtdemux0:(any) to element h264parse0:(any)
+GST_PADS gstutils.c:936:gst_pad_check_link: trying to link qtdemux0:video_0 and h264parse0:sink
+GST_PADS gstutils.c:1443:prepare_link_maybe_ghosting: qtdemux0 and h264parse0 in same bin, no need for ghost pads
+GST_PADS gstpad.c:2120:gst_pad_link_prepare: trying to link qtdemux0:video_0 and h264parse0:sink
+GST_PADS gstpad.c:2322:gst_pad_link_full: linked qtdemux0:video_0 and h264parse0:sink, successful
+GST_EVENT gstevent.c:1313:gst_event_new_reconfigure: creating reconfigure event
+GST_EVENT gstevent.c:709:gst_event_new_segment: creating segment event time segment start=66666666, stop=8.066666666, rate=1.000000, applied_rate=1.000000, flags=0x00, time=000000, base=000000, position 66666666, duration 99:99:99.999999999
+baseparse gstbaseparse.c:3564:gst_base_parse_set_passthrough:<h264parse0> passthrough: yes
+h264parse gsth264parse.c:1326:gst_h264_parse_update_src_caps:<h264parse0> setting framerate in caps
+baseparse gstbaseparse.c:3623:gst_base_parse_set_latency:<h264parse0> min/max latency 33333333, 33333333
+GST_EVENT gstevent.c:628:gst_event_new_caps: creating caps event video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high-4:2:2, codec_data=(buffer)017a001effe10018677a001ebcd940a03da10000030001000003003c0f162d9601000568ebecb22c, width=(int)640, height=(int)480, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, parsed=(boolean)true
+/GstPipeline:pipeline0/GstH264Parse:h264parse0.GstPad:src: caps = video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high-4:2:2, codec_data=(buffer)017a001effe10018677a001ebcd940a03da10000030001000003003c0f162d9601000568ebecb22c, width=(int)640, height=(int)480, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, parsed=(boolean)true
+GST_EVENT gstevent.c:628:gst_event_new_caps: creating caps event application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, sprop-parameter-sets=(string)"Z3oAHrzZQKA9oQAAAwABAAADADwPFi2W\,aOvssiw\=", payload=(int)96, ssrc=(uint)3975651, timestamp-offset=(uint)2845211916, seqnum-offset=(uint)22286
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0.GstPad:src: caps = application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, sprop-parameter-sets=(string)"Z3oAHrzZQKA9oQAAAwABAAADADwPFi2W\,aOvssiw\=", payload=(int)96, ssrc=(uint)3975651, timestamp-offset=(uint)2845211916, seqnum-offset=(uint)22286
+/GstPipeline:pipeline0/GstUDPSink:udpsink0.GstPad:sink: caps = application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264, sprop-parameter-sets=(string)"Z3oAHrzZQKA9oQAAAwABAAADADwPFi2W\,aOvssiw\=", payload=(int)96, ssrc=(uint)3975651, timestamp-offset=(uint)2845211916, seqnum-offset=(uint)22286
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0.GstPad:sink: caps = video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high-4:2:2, codec_data=(buffer)017a001effe10018677a001ebcd940a03da10000030001000003003c0f162d9601000568ebecb22c, width=(int)640, height=(int)480, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1, parsed=(boolean)true
+/GstPipeline:pipeline0/GstH264Parse:h264parse0.GstPad:sink: caps = video/x-h264, stream-format=(string)avc, alignment=(string)au, level=(string)3, profile=(string)high-4:2:2, codec_data=(buffer)017a001effe10018677a001ebcd940a03da10000030001000003003c0f162d9601000568ebecb22c, width=(int)640, height=(int)480, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0: timestamp = 2845211916
+/GstPipeline:pipeline0/GstRtpH264Pay:rtph264pay0: seqnum = 22286
+GST_STATES gstbin.c:3112:bin_handle_async_done:<pipeline0> committing state from READY to PAUSED, old pending PAUSED
+GST_STATES gstbin.c:3132:bin_handle_async_done:<pipeline0> completed state change, pending VOID
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<pipeline0> notifying about state-changed READY to PAUSED (VOID_PENDING pending)
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+GST_EVENT gstevent.c:1184:gst_event_new_latency: creating latency event 000000
+bin gstbin.c:2499:gst_bin_do_latency_func:<pipeline0> configured latency of 000000
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<udpsink0> current PAUSED pending VOID_PENDING, desired next PLAYING
+GST_STATES gstelement.c:2328:gst_element_continue_state:<udpsink0> completed state change to PLAYING
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<udpsink0> notifying about state-changed PAUSED to PLAYING (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'udpsink0' changed state to 4(PLAYING) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<rtph264pay0> current PAUSED pending VOID_PENDING, desired next PLAYING
+GST_STATES gstelement.c:2328:gst_element_continue_state:<rtph264pay0> completed state change to PLAYING
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<rtph264pay0> notifying about state-changed PAUSED to PLAYING (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'rtph264pay0' changed state to 4(PLAYING) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<h264parse0> current PAUSED pending VOID_PENDING, desired next PLAYING
+GST_STATES gstelement.c:2328:gst_element_continue_state:<h264parse0> completed state change to PLAYING
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<h264parse0> notifying about state-changed PAUSED to PLAYING (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'h264parse0' changed state to 4(PLAYING) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<qtdemux0> current PAUSED pending VOID_PENDING, desired next PLAYING
+GST_STATES gstelement.c:2328:gst_element_continue_state:<qtdemux0> completed state change to PLAYING
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<qtdemux0> notifying about state-changed PAUSED to PLAYING (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'qtdemux0' changed state to 4(PLAYING) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<filesrc0> current PAUSED pending VOID_PENDING, desired next PLAYING
+GST_STATES gstelement.c:2328:gst_element_continue_state:<filesrc0> completed state change to PLAYING
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<filesrc0> notifying about state-changed PAUSED to PLAYING (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'filesrc0' changed state to 4(PLAYING) successfully
+GST_STATES gstelement.c:2328:gst_element_continue_state:<pipeline0> completed state change to PLAYING
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<pipeline0> notifying about state-changed PAUSED to PLAYING (VOID_PENDING pending)
+New clock: GstSystemClock
+task gsttask.c:300:gst_task_func:<qtdemux0:sink> Task going to paused
+Got EOS from element "pipeline0".
+Execution ended after 00072255
+Setting pipeline to PAUSED ...
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<udpsink0> current PLAYING pending VOID_PENDING, desired next PAUSED
+GST_STATES gstelement.c:2328:gst_element_continue_state:<udpsink0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<udpsink0> notifying about state-changed PLAYING to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'udpsink0' changed state to 3(PAUSED) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<rtph264pay0> current PLAYING pending VOID_PENDING, desired next PAUSED
+GST_STATES gstelement.c:2328:gst_element_continue_state:<rtph264pay0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<rtph264pay0> notifying about state-changed PLAYING to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'rtph264pay0' changed state to 3(PAUSED) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<h264parse0> current PLAYING pending VOID_PENDING, desired next PAUSED
+GST_STATES gstelement.c:2328:gst_element_continue_state:<h264parse0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<h264parse0> notifying about state-changed PLAYING to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'h264parse0' changed state to 3(PAUSED) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<qtdemux0> current PLAYING pending VOID_PENDING, desired next PAUSED
+GST_STATES gstelement.c:2328:gst_element_continue_state:<qtdemux0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<qtdemux0> notifying about state-changed PLAYING to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'qtdemux0' changed state to 3(PAUSED) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<filesrc0> current PLAYING pending VOID_PENDING, desired next PAUSED
+GST_STATES gstelement.c:2328:gst_element_continue_state:<filesrc0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<filesrc0> notifying about state-changed PLAYING to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'filesrc0' changed state to 3(PAUSED) successfully
+GST_STATES gstelement.c:2328:gst_element_continue_state:<pipeline0> completed state change to PAUSED
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<pipeline0> notifying about state-changed PLAYING to PAUSED (VOID_PENDING pending)
+GST_STATES gstbin.c:1827:gst_bin_get_state_func:<pipeline0> getting state
+Setting pipeline to READY ...
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<udpsink0> current PAUSED pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<udpsink0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<udpsink0> notifying about state-changed PAUSED to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'udpsink0' changed state to 2(READY) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<rtph264pay0> current PAUSED pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<rtph264pay0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<rtph264pay0> notifying about state-changed PAUSED to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'rtph264pay0' changed state to 2(READY) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<h264parse0> current PAUSED pending VOID_PENDING, desired next READY
+GST_STATES gstelement.c:2328:gst_element_continue_state:<h264parse0> completed state change to READY
+GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<h264parse0> notifying about state-changed PAUSED to READY (VOID_PENDING pending)
+GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'h264parse0' changed state to 2(READY) successfully
+GST_STATES gstbin.c:2227:gst_bin_element_set_state:<qtdemux0> current PAUSED pending VOID_PENDING, desired next READY
+task gsttask.c:302:gst_task_func:<qtdemux0:sink> Task resume from paused
+GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<qtdemux0> removing pad 'video_0'
+GST_ELEMENT_PADS gstpad.c:1877:gst_pad_unlink: unlinking qtdemux0:video_0(0x259d200) and h264parse0:sink(0x259c4e0)
+20172466INFO        GST_ELEMENT_PADS gstpad.c:1931:gst_pad_unlink: unlinked qtdemux0:video_0 and h264parse0:sink
+20189673INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<qtdemux0> completed state change to READY
+20193840INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<qtdemux0> notifying about state-changed PAUSED to READY (VOID_PENDING pending)
+20200241INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'qtdemux0' changed state to 2(READY) successfully
+20209939INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<udpsink0> current READY pending VOID_PENDING, desired next READY
+20214133INFO              GST_STATES gstbin.c:2344:gst_bin_element_set_state:<udpsink0> skipping transition from READY to  READY
+20217788INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'udpsink0' changed state to 2(READY) successfully
+20222961INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<rtph264pay0> current READY pending VOID_PENDING, desired next READY
+20227017INFO              GST_STATES gstbin.c:2344:gst_bin_element_set_state:<rtph264pay0> skipping transition from READY to  READY
+20231171INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'rtph264pay0' changed state to 2(READY) successfully
+20236169INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<h264parse0> current READY pending VOID_PENDING, desired next READY
+20240037INFO              GST_STATES gstbin.c:2344:gst_bin_element_set_state:<h264parse0> skipping transition from READY to  READY
+20243372INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'h264parse0' changed state to 2(READY) successfully
+20248599INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<qtdemux0> current READY pending VOID_PENDING, desired next READY
+20252466INFO              GST_STATES gstbin.c:2344:gst_bin_element_set_state:<qtdemux0> skipping transition from READY to  READY
+20255719INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'qtdemux0' changed state to 2(READY) successfully
+20260226INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<filesrc0> current PAUSED pending VOID_PENDING, desired next READY
+20266388INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<filesrc0> completed state change to READY
+20269808INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<filesrc0> notifying about state-changed PAUSED to READY (VOID_PENDING pending)
+20275258INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'filesrc0' changed state to 2(READY) successfully
+20281714INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<pipeline0> completed state change to READY
+20285324INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<pipeline0> notifying about state-changed PAUSED to READY (VOID_PENDING pending)
+20294437INFO              GST_STATES gstbin.c:1827:gst_bin_get_state_func:<pipeline0> getting state
+Setting pipeline to NULL ...
+20309270INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<udpsink0> current READY pending VOID_PENDING, desired next NULL
+20326863INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<udpsink0> completed state change to NULL
+20330931INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<udpsink0> notifying about state-changed READY to NULL (VOID_PENDING pending)
+20336903INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'udpsink0' changed state to 1(NULL) successfully
+20342557INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<rtph264pay0> current READY pending VOID_PENDING, desired next NULL
+20348724INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<rtph264pay0> completed state change to NULL
+20352279INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<rtph264pay0> notifying about state-changed READY to NULL (VOID_PENDING pending)
+20357809INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'rtph264pay0' changed state to 1(NULL) successfully
+20362783INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<h264parse0> current READY pending VOID_PENDING, desired next NULL
+20368504INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<h264parse0> completed state change to NULL
+20371824INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<h264parse0> notifying about state-changed READY to NULL (VOID_PENDING pending)
+20377157INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'h264parse0' changed state to 1(NULL) successfully
+20382631INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<qtdemux0> current READY pending VOID_PENDING, desired next NULL
+20388173INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<qtdemux0> completed state change to NULL
+20391609INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<qtdemux0> notifying about state-changed READY to NULL (VOID_PENDING pending)
+20396954INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'qtdemux0' changed state to 1(NULL) successfully
+20401879INFO              GST_STATES gstbin.c:2227:gst_bin_element_set_state:<filesrc0> current READY pending VOID_PENDING, desired next NULL
+20407299INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<filesrc0> completed state change to NULL
+20410727INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<filesrc0> notifying about state-changed READY to NULL (VOID_PENDING pending)
+20415971INFO              GST_STATES gstbin.c:2656:gst_bin_change_state_func:<pipeline0> child 'filesrc0' changed state to 1(NULL) successfully
+20432918INFO              GST_STATES gstelement.c:2328:gst_element_continue_state:<pipeline0> completed state change to NULL
+20436691INFO              GST_STATES gstelement.c:2233:_priv_gst_element_state_changed:<pipeline0> notifying about state-changed READY to NULL (VOID_PENDING pending)
+Freeing pipeline ...
+20449212INFO        GST_ELEMENT_PADS gstpad.c:1877:gst_pad_unlink: unlinking rtph264pay0:src(0x259c940) and udpsink0:sink(0x259cda0)
+20457379INFO        GST_ELEMENT_PADS gstpad.c:1931:gst_pad_unlink: unlinked rtph264pay0:src and udpsink0:sink
+20464921INFO           GST_PARENTAGE gstbin.c:1556:gst_bin_remove_func:<pipeline0> removed child "udpsink0"
+20472090INFO         GST_REFCOUNTING gstelement.c:2873:gst_element_dispose:<udpsink0> dispose
+20475586INFO        GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<udpsink0> removing pad 'sink'
+20481177INFO         GST_REFCOUNTING gstelement.c:2917:gst_element_dispose:<udpsink0> parent class dispose
+20489648INFO         GST_REFCOUNTING gstelement.c:2948:gst_element_finalize:<udpsink0> finalize
+20492967INFO         GST_REFCOUNTING gstelement.c:2953:gst_element_finalize:<udpsink0> finalize parent
+20498050INFO        GST_ELEMENT_PADS gstpad.c:1877:gst_pad_unlink: unlinking h264parse0:src(0x259c710) and rtph264pay0:sink(0x259cb70)
+20505291INFO        GST_ELEMENT_PADS gstpad.c:1931:gst_pad_unlink: unlinked h264parse0:src and rtph264pay0:sink
+20512490INFO           GST_PARENTAGE gstbin.c:1556:gst_bin_remove_func:<pipeline0> removed child "rtph264pay0"
+20517354INFO         GST_REFCOUNTING gstelement.c:2873:gst_element_dispose:<rtph264pay0> dispose
+20520522INFO        GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<rtph264pay0> removing pad 'src'
+20525797INFO        GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<rtph264pay0> removing pad 'sink'
+20530780INFO         GST_REFCOUNTING gstelement.c:2917:gst_element_dispose:<rtph264pay0> parent class dispose
+20540244INFO         GST_REFCOUNTING gstelement.c:2948:gst_element_finalize:<rtph264pay0> finalize
+20543390INFO         GST_REFCOUNTING gstelement.c:2953:gst_element_finalize:<rtph264pay0> finalize parent
+20548661INFO           GST_PARENTAGE gstbin.c:1556:gst_bin_remove_func:<pipeline0> removed child "h264parse0"
+20553472INFO         GST_REFCOUNTING gstelement.c:2873:gst_element_dispose:<h264parse0> dispose
+20556642INFO        GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<h264parse0> removing pad 'sink'
+20561706INFO        GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<h264parse0> removing pad 'src'
+20566766INFO         GST_REFCOUNTING gstelement.c:2917:gst_element_dispose:<h264parse0> parent class dispose
+20575284INFO         GST_REFCOUNTING gstelement.c:2948:gst_element_finalize:<h264parse0> finalize
+20578374INFO         GST_REFCOUNTING gstelement.c:2953:gst_element_finalize:<h264parse0> finalize parent
+20582712INFO        GST_ELEMENT_PADS gstpad.c:1877:gst_pad_unlink: unlinking filesrc0:src(0x259c080) and qtdemux0:sink(0x259c2b0)
+20589813INFO        GST_ELEMENT_PADS gstpad.c:1931:gst_pad_unlink: unlinked filesrc0:src and qtdemux0:sink
+20596882INFO           GST_PARENTAGE gstbin.c:1556:gst_bin_remove_func:<pipeline0> removed child "qtdemux0"
+20602496INFO         GST_REFCOUNTING gstelement.c:2873:gst_element_dispose:<qtdemux0> dispose
+20605608INFO        GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<qtdemux0> removing pad 'sink'
+20611660INFO         GST_REFCOUNTING gstelement.c:2917:gst_element_dispose:<qtdemux0> parent class dispose
+20615490INFO         GST_REFCOUNTING gstelement.c:2948:gst_element_finalize:<qtdemux0> finalize
+20618489INFO         GST_REFCOUNTING gstelement.c:2953:gst_element_finalize:<qtdemux0> finalize parent
+20624727INFO           GST_PARENTAGE gstbin.c:1556:gst_bin_remove_func:<pipeline0> removed child "filesrc0"
+20629293INFO         GST_REFCOUNTING gstelement.c:2873:gst_element_dispose:<filesrc0> dispose
+20632328INFO        GST_ELEMENT_PADS gstelement.c:766:gst_element_remove_pad:<filesrc0> removing pad 'src'
+20637488INFO         GST_REFCOUNTING gstelement.c:2917:gst_element_dispose:<filesrc0> parent class dispose
+20641683INFO         GST_REFCOUNTING gstelement.c:2948:gst_element_finalize:<filesrc0> finalize
+20644682INFO         GST_REFCOUNTING gstelement.c:2953:gst_element_finalize:<filesrc0> finalize parent
+20648958INFO         GST_REFCOUNTING gstelement.c:2873:gst_element_dispose:<pipeline0> dispose
+20659057INFO         GST_REFCOUNTING gstelement.c:2917:gst_element_dispose:<pipeline0> parent class dispose
+20662924INFO         GST_REFCOUNTING gstelement.c:2948:gst_element_finalize:<pipeline0> finalize
+20665905INFO         GST_REFCOUNTING gstelement.c:2953:gst_element_finalize:<pipeline0> finalize parent
+20669972INFO                GST_INIT gst.c:938:gst_deinit: deinitializing GStreamer
+22595970INFO                GST_INIT gst.c:1068:gst_deinit: deinitialized GStreamer
+!julian@julian-Z87X-UD3H ~/gstreamer/gstreamer/h264 $ 
